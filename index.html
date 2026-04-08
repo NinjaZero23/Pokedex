@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pokédex</title>
+
+  <!-- Fuentes de Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
+
+  <!-- Nuestros estilos -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ==============================
+       BARRA SUPERIOR (HEADER)
+       Contiene: logo, buscador, selector de generación, contador
+       ============================== -->
+  <header id="header">
+
+    <!-- Logo -->
+    <div id="logo">
+      <div id="logo-icon"></div>
+      <span id="logo-text">POKÉDEX</span>
+    </div>
+
+    <div class="hdivider"></div>
+
+    <!-- Buscador -->
+    <div class="search-wrap">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" id="search" placeholder="Buscar por nombre o #..." autocomplete="off" />
+    </div>
+
+    <!-- Selector de generación -->
+    <select id="gen-select">
+      <option value="1,151">Gen I (Kanto)</option>
+      <option value="152,251">Gen II (Johto)</option>
+      <option value="252,386">Gen III (Hoenn)</option>
+      <option value="387,493">Gen IV (Sinnoh)</option>
+      <option value="494,649">Gen V (Unova)</option>
+      <option value="650,721">Gen VI (Kalos)</option>
+      <option value="722,809">Gen VII (Alola)</option>
+      <option value="810,905">Gen VIII (Galar)</option>
+    </select>
+
+    <!-- Contador de resultados -->
+    <span id="pokemon-count"></span>
+
+  </header>
+
+
+  <!-- ==============================
+       BARRA DE FILTROS POR TIPO
+       Se genera automáticamente con JavaScript
+       ============================== -->
+  <div id="type-bar">
+    <button class="type-chip active" data-type="all">todos</button>
+    <!-- Los demás chips se insertan aquí desde app.js -->
+  </div>
+
+
+  <!-- ==============================
+       CONTENIDO PRINCIPAL
+       Dos columnas: grid izquierda + panel detalle derecha
+       ============================== -->
+  <main id="main">
+
+    <!-- Columna izquierda: cuadrícula de pokémon -->
+    <section id="grid-section">
+      <div id="pokemon-grid">
+
+        <!-- Spinner de carga (visible mientras se cargan los datos) -->
+        <div id="loader">
+          <div class="pokeball"></div>
+          <span>Cargando Pokémon...</span>
+        </div>
+
+        <!-- Mensaje cuando no hay resultados de búsqueda -->
+        <div id="no-results">
+          <div class="nr-icon">?</div>
+          <p>Ningún Pokémon coincide con tu búsqueda.</p>
+        </div>
+
+        <!-- Las tarjetas .poke-card se insertan aquí desde app.js -->
+
+      </div>
+    </section>
+
+
+    <!-- Columna derecha: panel de detalle del pokémon seleccionado -->
+    <aside id="detail-panel">
+
+      <!-- Estado vacío: se muestra cuando no hay ningún pokémon seleccionado -->
+      <div id="detail-empty">
+        <div class="empty-ball"></div>
+        <p>Selecciona un Pokémon<br>para ver sus detalles</p>
+      </div>
+
+      <!-- Contenido del detalle: se muestra cuando se selecciona un pokémon -->
+      <!-- app.js inyecta el HTML completo aquí -->
+      <div id="detail-content" style="display:none"></div>
+
+    </aside>
+
+  </main>
+
+
+  <!-- ==============================
+       JAVASCRIPT
+       Va al final del body para que todos
+       los elementos HTML ya existan cuando
+       el script intente acceder a ellos
+       ============================== -->
+  <script src="app.js"></script>
+
+</body>
+</html>
