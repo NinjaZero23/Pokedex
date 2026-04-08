@@ -1,6 +1,6 @@
 /* ============================================================
    POKÉDEX — style.css
-   
+
    Estructura de este archivo:
    1. Variables globales (colores, fuentes, medidas)
    2. Reset y base
@@ -243,7 +243,7 @@ button, input, select { font-family: var(--font); } /* hereda la fuente */
 }
 .type-chip:hover { color: var(--text); background: var(--surface); }
 /* El chip activo recibe color de fondo desde JavaScript */
-.type-chip.active { color: #000; border-color: transparent; font-weight: 600; }
+.type-chip.active { color: #000; border-color: transparent; font-weight: 600; background-color: orange; }
 
 
 /* ────────────────────────────────────────────
