@@ -721,6 +721,127 @@ button, input, select { font-family: var(--font); } /* hereda la fuente */
 
 
 /* ────────────────────────────────────────────
+   TARJETAS DE HABILIDADES
+   ──────────────────────────────────────────── */
+
+#abilities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.ability-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  transition: border-color .15s;
+}
+.ability-card:hover { border-color: var(--border2); }
+
+.ability-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  cursor: pointer;
+  user-select: none;
+  gap: 8px;
+}
+
+.ability-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ability-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: capitalize;
+}
+
+.ability-hidden {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ability-arrow {
+  font-size: 12px;
+  color: var(--text3);
+  transition: transform .2s ease;
+  flex-shrink: 0;
+}
+
+.ability-body {
+  padding: 0 12px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.ability-loading {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0;
+}
+
+.ability-effect {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.65;
+  margin-top: 10px;
+  padding-left: 10px;
+  border-left: 2px solid var(--accent);
+}
+
+.ability-desc {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.65;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+.ability-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.ability-meta-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--surface2);
+  border-radius: var(--r-sm);
+  padding: 6px 9px;
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 500;
+  text-transform: capitalize;
+  flex: 1;
+  min-width: 120px;
+}
+
+.ability-meta-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 400;
+}
+
+
+/* ────────────────────────────────────────────
    9. RESPONSIVE
    ──────────────────────────────────────────── */
 

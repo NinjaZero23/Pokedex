@@ -487,15 +487,12 @@ async function renderDetail(p, species) {
           <div class="info-cell-val">${(p.weight / 10).toFixed(1)} kg</div>
         </div>
 
-        <div class="info-cell full">
-          <div class="info-cell-label">Habilidades</div>
-          <div class="info-cell-val" style="font-size:13px; font-weight:500">
-            ${p.abilities.map(a =>
-              `${a.ability.name.replace(/-/g, ' ')}
-               ${a.is_hidden ? '<span style="font-size:10px; color:var(--text3)">(oculta)</span>' : ''}`
-            ).join(' · ')}
+        ${genus ? `
+          <div class="info-cell full">
+            <div class="info-cell-label">Categoría</div>
+            <div class="info-cell-val" style="font-size:13px; font-weight:400">${genus}</div>
           </div>
-        </div>
+        ` : ''}
 
         ${genus ? `
           <div class="info-cell full">
@@ -504,6 +501,30 @@ async function renderDetail(p, species) {
           </div>
         ` : ''}
 
+      </div>
+    </div>
+
+
+    <!-- HABILIDADES DETALLADAS -->
+    <div class="d-section">
+      <div class="d-label">habilidades</div>
+      <div id="abilities-list">
+        ${p.abilities.map(a => `
+          <div class="ability-card" data-ability="${a.ability.name}">
+            <div class="ability-header">
+              <div class="ability-left">
+                <span class="ability-name">${a.ability.name.replace(/-/g, ' ')}</span>
+                ${a.is_hidden ? '<span class="ability-hidden">oculta</span>' : ''}
+              </div>
+              <span class="ability-arrow">▾</span>
+            </div>
+            <div class="ability-body">
+              <div class="ability-loading">
+                <div class="pokeball" style="width:20px;height:20px;border-width:2px"></div>
+              </div>
+            </div>
+          </div>
+        `).join('')}
       </div>
     </div>
 
@@ -591,6 +612,9 @@ async function renderDetail(p, species) {
       document.getElementById('detail-sprite').src = tab.dataset.src;
     });
   });
+
+  // Activar tarjetas de habilidades
+  initAbilityCards();
 
   // Cargar cadena evolutiva (es una petición separada)
   if (species?.evolution_chain?.url) {
@@ -683,7 +707,87 @@ async function loadEvolutions(url, currentPokemonId) {
 
 
 /* ────────────────────────────────────────────
-   10. EVENTOS GLOBALES
+   10. HABILIDADES DETALLADAS
+   ──────────────────────────────────────────── */
+
+const abilityCache = {};
+
+async function fetchAbility(name) {
+  if (abilityCache[name]) return abilityCache[name];
+  const data = await get(`${API}/ability/${name}`);
+
+  // Español con fallback a inglés
+  const flavor =
+    data.flavor_text_entries?.find(e => e.language.name === 'es') ||
+    data.flavor_text_entries?.find(e => e.language.name === 'en');
+  const effectEntry =
+    data.effect_entries?.find(e => e.language.name === 'es') ||
+    data.effect_entries?.find(e => e.language.name === 'en');
+
+  const result = {
+    desc:        flavor?.flavor_text?.replace(/[\f\n\r]/g, ' ') || '',
+    shortEffect: effectEntry?.short_effect?.replace(/[\f\n\r]/g, ' ') || '',
+    pokemon:     data.pokemon?.slice(0, 4).map(p => p.pokemon.name) || [],
+    generation:  data.generation?.name?.replace('generation-', 'Gen ').toUpperCase() || '',
+  };
+
+  abilityCache[name] = result;
+  return result;
+}
+
+function initAbilityCards() {
+  document.querySelectorAll('.ability-card').forEach(card => {
+    const header = card.querySelector('.ability-header');
+    const body   = card.querySelector('.ability-body');
+    const arrow  = card.querySelector('.ability-arrow');
+    const name   = card.dataset.ability;
+    let loaded   = false;
+    let open     = false;
+
+    body.style.display = 'none';
+
+    header.addEventListener('click', async () => {
+      open = !open;
+      arrow.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+      body.style.display = open ? 'block' : 'none';
+
+      if (open && !loaded) {
+        loaded = true;
+        try {
+          const ability = await fetchAbility(name);
+          body.innerHTML = `
+            ${ability.shortEffect ? `
+              <p class="ability-effect">${ability.shortEffect}</p>
+            ` : ''}
+            ${ability.desc && ability.desc !== ability.shortEffect ? `
+              <p class="ability-desc">${ability.desc}</p>
+            ` : ''}
+            <div class="ability-meta">
+              ${ability.generation ? `
+                <span class="ability-meta-pill">
+                  <span class="ability-meta-label">introduced</span>
+                  ${ability.generation}
+                </span>
+              ` : ''}
+              ${ability.pokemon.length ? `
+                <span class="ability-meta-pill">
+                  <span class="ability-meta-label">also in</span>
+                  ${ability.pokemon.join(', ')}
+                </span>
+              ` : ''}
+            </div>
+          `;
+        } catch {
+          body.innerHTML = `<p class="ability-desc" style="color:var(--text3)">Could not load ability data.</p>`;
+        }
+      }
+    });
+  });
+}
+
+
+/* ────────────────────────────────────────────
+   11. EVENTOS GLOBALES
    ──────────────────────────────────────────── */
 
 // Cerrar el drawer en móvil al tocar fuera del panel
