@@ -11,8 +11,10 @@
    7.  Render de la cuadrícula de tarjetas
    8.  Render del panel de detalle
    9.  Cadena evolutiva
-   10. Eventos globales (teclado, clic fuera)
-   11. Inicio de la aplicación
+   10. Habilidades detalladas
+   11. Habilidades detalladas (cards expandibles)
+   12. Eventos globales (teclado, clic fuera)
+   13. Inicio de la aplicación
    ============================================================ */
 
 
@@ -152,6 +154,22 @@ async function get(url) {
   return response.json();
 }
 
+/**
+ * Escapa caracteres HTML especiales para prevenir XSS.
+ * Úsala siempre que insertes datos externos en innerHTML.
+ * @param {string} str
+ * @returns {string}
+ */
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 
 /* ────────────────────────────────────────────
    5. CARGA DE GENERACIÓN
@@ -168,6 +186,9 @@ async function loadGen(start, end) {
   $search.value = '';
   currentId = null;
 
+  // Limpiar caché al cambiar de generación para liberar memoria
+  Object.keys(cache).forEach(k => delete cache[k]);
+
   // Limpiar la cuadrícula (solo quitar tarjetas, no el loader ni no-results)
   [...$grid.querySelectorAll('.poke-card')].forEach(el => el.remove());
   $loader.style.display = 'flex';
@@ -179,27 +200,36 @@ async function loadGen(start, end) {
 
   // Cargar en lotes de 20 (Promise.all hace las 20 peticiones en paralelo)
   const BATCH_SIZE = 20;
-  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
-    const batch = ids.slice(i, i + BATCH_SIZE);
+  try {
+    for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+      const batch = ids.slice(i, i + BATCH_SIZE);
 
-    const results = await Promise.all(
-      batch.map(id =>
-        get(`${API}/pokemon/${id}`)
-          .then(p => ({
-            id:     p.id,
-            name:   p.name,
-            sprite: p.sprites.front_default,
-            types:  p.types.map(t => t.type.name),
-          }))
-          .catch(() => null) // si falla un pokémon, devuelve null (lo filtramos después)
-      )
-    );
+      const results = await Promise.all(
+        batch.map(id =>
+          get(`${API}/pokemon/${id}`)
+            .then(p => ({
+              id:     p.id,
+              name:   p.name,
+              sprite: p.sprites.front_default,
+              types:  p.types.map(t => t.type.name),
+            }))
+            .catch(() => null) // si falla un pokémon individual, devuelve null
+        )
+      );
 
-    // Agregar al array global ignorando los que fallaron
-    allPokemon.push(...results.filter(Boolean));
+      // Agregar al array global ignorando los que fallaron
+      allPokemon.push(...results.filter(Boolean));
 
-    // Render parcial: mostramos los que ya tenemos mientras cargamos el resto
-    applyFilters();
+      // Render parcial: mostramos los que ya tenemos mientras cargamos el resto
+      applyFilters();
+    }
+  } catch (error) {
+    // Si falla un lote completo (ej: sin conexión), mostramos mensaje de error
+    $loader.innerHTML = `
+      <span style="color:var(--text3); font-size:13px">
+        Error de conexión. Revisa tu internet y recarga la página.
+      </span>`;
+    return;
   }
 
   $loader.style.display = 'none';
@@ -249,10 +279,14 @@ $typeBar.addEventListener('click', e => {
   applyFilters();
 });
 
-// Evento: escribir en el buscador
+// Evento: escribir en el buscador (con debounce de 150ms para no re-renderizar en cada tecla)
+let _searchDebounce;
 $search.addEventListener('input', e => {
-  searchTerm = e.target.value.toLowerCase().trim();
-  applyFilters();
+  clearTimeout(_searchDebounce);
+  _searchDebounce = setTimeout(() => {
+    searchTerm = e.target.value.toLowerCase().trim();
+    applyFilters();
+  }, 150);
 });
 
 // Evento: cambiar de generación
@@ -321,11 +355,11 @@ function makeCard(p, idx) {
   div.innerHTML = `
     <div class="card-blob" style="background:${mainColor}"></div>
     <span class="card-num">#${String(p.id).padStart(3, '0')}</span>
-    <img class="card-img" src="${p.sprite || ''}" alt="${p.name}" loading="lazy" />
-    <span class="card-name">${p.name}</span>
+    <img class="card-img" src="${esc(p.sprite || '')}" alt="${esc(p.name)}" loading="lazy" />
+    <span class="card-name">${esc(p.name)}</span>
     <div class="card-types">
       ${p.types.map(t =>
-        `<span class="type-badge" style="background:${TYPE_COLORS[t] || '#888'}">${t}</span>`
+        `<span class="type-badge" style="background:${TYPE_COLORS[t] || '#888'}">${esc(t)}</span>`
       ).join('')}
     </div>
   `;
@@ -452,8 +486,8 @@ async function renderDetail(p, species) {
         ${sprites.back   ? `<button class="sprite-tab" data-src="${sprites.back}">espalda</button>` : ''}
       </div>
 
-      <img id="detail-sprite" src="${sprites.normal || ''}" alt="${p.name}" />
-      <h2 id="detail-name">${p.name}</h2>
+      <img id="detail-sprite" src="${esc(sprites.normal || '')}" alt="${esc(p.name)}" />
+      <h2 id="detail-name">${esc(p.name)}</h2>
 
       <div id="detail-types">
         ${types.map(t =>
@@ -494,13 +528,6 @@ async function renderDetail(p, species) {
           </div>
         ` : ''}
 
-        ${genus ? `
-          <div class="info-cell full">
-            <div class="info-cell-label">Categoría</div>
-            <div class="info-cell-val" style="font-size:13px; font-weight:400">${genus}</div>
-          </div>
-        ` : ''}
-
       </div>
     </div>
 
@@ -510,10 +537,10 @@ async function renderDetail(p, species) {
       <div class="d-label">habilidades</div>
       <div id="abilities-list">
         ${p.abilities.map(a => `
-          <div class="ability-card" data-ability="${a.ability.name}">
+          <div class="ability-card" data-ability="${esc(a.ability.name)}">
             <div class="ability-header">
               <div class="ability-left">
-                <span class="ability-name">${a.ability.name.replace(/-/g, ' ')}</span>
+                <span class="ability-name">${esc(a.ability.name.replace(/-/g, ' '))}</span>
                 ${a.is_hidden ? '<span class="ability-hidden">oculta</span>' : ''}
               </div>
               <span class="ability-arrow">▾</span>
@@ -707,7 +734,7 @@ async function loadEvolutions(url, currentPokemonId) {
 
 
 /* ────────────────────────────────────────────
-   10. HABILIDADES DETALLADAS
+   11. HABILIDADES DETALLADAS
    ──────────────────────────────────────────── */
 
 const abilityCache = {};
@@ -787,7 +814,7 @@ function initAbilityCards() {
 
 
 /* ────────────────────────────────────────────
-   11. EVENTOS GLOBALES
+   12. EVENTOS GLOBALES
    ──────────────────────────────────────────── */
 
 // Cerrar el drawer en móvil al tocar fuera del panel
@@ -816,7 +843,7 @@ document.addEventListener('keydown', e => {
 
 
 /* ────────────────────────────────────────────
-   11. INICIO
+   13. INICIO
    Cargamos la primera generación al abrir la página.
    ──────────────────────────────────────────── */
 loadGen(1, 151);
