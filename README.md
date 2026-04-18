@@ -9,24 +9,19 @@ Usa la [PokéAPI](https://pokeapi.co/) gratuita — no necesita backend ni base 
 
 ```
 pokedex/
-├── index.html    → Página principal (requiere sesión activa)
-├── login.html    → Página de login y registro
-├── style.css     → Estilos globales (variables, layout, tarjetas, panel)
-├── auth.css      → Estilos de la página de autenticación
-├── app.js        → Lógica de la Pokédex y llamadas a la API
-├── auth.js       → Lógica de login y registro (localStorage)
-├── session.js    → Protección de ruta: redirige a login si no hay sesión
-├── CLAUDE.md     → Guía de arquitectura para Claude Code
-└── README.md     → Este archivo
+├── index.html   → Estructura de la página (el "esqueleto")
+├── style.css    → Todo el diseño visual
+├── app.js       → Toda la lógica y llamadas a la API
+└── README.md    → Este archivo
 ```
 
 ---
 
 ## 🚀 Cómo usar en local (tu computador)
 
-1. Descarga todos los archivos del proyecto y ponlos en la **misma carpeta**
-2. Abre `login.html` con tu navegador (o usa Live Server en VS Code)
-3. Crea una cuenta o inicia sesión — los datos se guardan solo en tu navegador
+1. Descarga los 3 archivos: `index.html`, `style.css`, `app.js`
+2. Ponlos todos en la **misma carpeta**
+3. Abre `index.html` con tu navegador (doble clic)
 4. ¡Listo! Necesitas conexión a internet para cargar los datos de la PokéAPI
 
 > ⚠️ Algunos navegadores bloquean peticiones desde archivos locales.

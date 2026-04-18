@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Pokédex completa con información de todos los Pokémon: stats, habilidades, evoluciones, debilidades y más." />
+  <meta name="theme-color" content="#080c10" />
   <title>Pokédex</title>
+
+  <!-- Favicon: pokébola SVG inline como data URI -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23ff4d6d' stroke='%23222' stroke-width='4'/><rect x='2' y='46' width='96' height='8' fill='%23222'/><circle cx='50' cy='50' r='14' fill='white' stroke='%23222' stroke-width='4'/><circle cx='50' cy='50' r='7' fill='%23080c10'/></svg>" />
 
   <!-- Fuentes de Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -110,7 +115,26 @@
 
   </main>
 
+  <!-- ==============================
+       BARRA DE EQUIPO
+       Fija en la parte inferior de la pantalla
+       ============================== -->
+  <div id="team-bar">
+    <div id="team-bar-inner">
+      <div id="team-bar-header">
+        <span id="team-bar-title">
+          <span class="team-bar-icon">◈</span>
+          Mi equipo
+        </span>
+        <span id="team-count">0 / 6</span>
+        <button id="btn-clear-team" title="Vaciar equipo">Limpiar</button>
+      </div>
+      <div id="team-slots"></div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
+  <script src="team.js"></script>
 
 </body>
 </html>

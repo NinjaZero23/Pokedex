@@ -11,10 +11,8 @@
    7.  Render de la cuadrícula de tarjetas
    8.  Render del panel de detalle
    9.  Cadena evolutiva
-   10. Habilidades detalladas
-   11. Habilidades detalladas (cards expandibles)
-   12. Eventos globales (teclado, clic fuera)
-   13. Inicio de la aplicación
+   10. Eventos globales (teclado, clic fuera)
+   11. Inicio de la aplicación
    ============================================================ */
 
 
@@ -154,22 +152,6 @@ async function get(url) {
   return response.json();
 }
 
-/**
- * Escapa caracteres HTML especiales para prevenir XSS.
- * Úsala siempre que insertes datos externos en innerHTML.
- * @param {string} str
- * @returns {string}
- */
-function esc(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
 
 /* ────────────────────────────────────────────
    5. CARGA DE GENERACIÓN
@@ -186,9 +168,6 @@ async function loadGen(start, end) {
   $search.value = '';
   currentId = null;
 
-  // Limpiar caché al cambiar de generación para liberar memoria
-  Object.keys(cache).forEach(k => delete cache[k]);
-
   // Limpiar la cuadrícula (solo quitar tarjetas, no el loader ni no-results)
   [...$grid.querySelectorAll('.poke-card')].forEach(el => el.remove());
   $loader.style.display = 'flex';
@@ -200,36 +179,27 @@ async function loadGen(start, end) {
 
   // Cargar en lotes de 20 (Promise.all hace las 20 peticiones en paralelo)
   const BATCH_SIZE = 20;
-  try {
-    for (let i = 0; i < ids.length; i += BATCH_SIZE) {
-      const batch = ids.slice(i, i + BATCH_SIZE);
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    const batch = ids.slice(i, i + BATCH_SIZE);
 
-      const results = await Promise.all(
-        batch.map(id =>
-          get(`${API}/pokemon/${id}`)
-            .then(p => ({
-              id:     p.id,
-              name:   p.name,
-              sprite: p.sprites.front_default,
-              types:  p.types.map(t => t.type.name),
-            }))
-            .catch(() => null) // si falla un pokémon individual, devuelve null
-        )
-      );
+    const results = await Promise.all(
+      batch.map(id =>
+        get(`${API}/pokemon/${id}`)
+          .then(p => ({
+            id:     p.id,
+            name:   p.name,
+            sprite: p.sprites.front_default,
+            types:  p.types.map(t => t.type.name),
+          }))
+          .catch(() => null) // si falla un pokémon, devuelve null (lo filtramos después)
+      )
+    );
 
-      // Agregar al array global ignorando los que fallaron
-      allPokemon.push(...results.filter(Boolean));
+    // Agregar al array global ignorando los que fallaron
+    allPokemon.push(...results.filter(Boolean));
 
-      // Render parcial: mostramos los que ya tenemos mientras cargamos el resto
-      applyFilters();
-    }
-  } catch (error) {
-    // Si falla un lote completo (ej: sin conexión), mostramos mensaje de error
-    $loader.innerHTML = `
-      <span style="color:var(--text3); font-size:13px">
-        Error de conexión. Revisa tu internet y recarga la página.
-      </span>`;
-    return;
+    // Render parcial: mostramos los que ya tenemos mientras cargamos el resto
+    applyFilters();
   }
 
   $loader.style.display = 'none';
@@ -279,14 +249,10 @@ $typeBar.addEventListener('click', e => {
   applyFilters();
 });
 
-// Evento: escribir en el buscador (con debounce de 150ms para no re-renderizar en cada tecla)
-let _searchDebounce;
+// Evento: escribir en el buscador
 $search.addEventListener('input', e => {
-  clearTimeout(_searchDebounce);
-  _searchDebounce = setTimeout(() => {
-    searchTerm = e.target.value.toLowerCase().trim();
-    applyFilters();
-  }, 150);
+  searchTerm = e.target.value.toLowerCase().trim();
+  applyFilters();
 });
 
 // Evento: cambiar de generación
@@ -335,6 +301,9 @@ function renderGrid() {
   // Mostrar mensaje "sin resultados" si corresponde
   $noR.style.display =
     filteredPokemon.length === 0 && allPokemon.length > 0 ? 'block' : 'none';
+
+  // Actualizar badges de equipo en las tarjetas recién renderizadas
+  if (window.refreshAllTeamBadges) window.refreshAllTeamBadges();
 }
 
 /**
@@ -355,11 +324,11 @@ function makeCard(p, idx) {
   div.innerHTML = `
     <div class="card-blob" style="background:${mainColor}"></div>
     <span class="card-num">#${String(p.id).padStart(3, '0')}</span>
-    <img class="card-img" src="${esc(p.sprite || '')}" alt="${esc(p.name)}" loading="lazy" />
-    <span class="card-name">${esc(p.name)}</span>
+    <img class="card-img" src="${p.sprite || ''}" alt="${p.name}" loading="lazy" />
+    <span class="card-name">${p.name}</span>
     <div class="card-types">
       ${p.types.map(t =>
-        `<span class="type-badge" style="background:${TYPE_COLORS[t] || '#888'}">${esc(t)}</span>`
+        `<span class="type-badge" style="background:${TYPE_COLORS[t] || '#888'}">${t}</span>`
       ).join('')}
     </div>
   `;
@@ -386,6 +355,11 @@ async function showDetail(id) {
     card.classList.toggle('active', +card.dataset.id === id)
   );
 
+  // Actualizar título de la pestaña
+  const found = allPokemon.find(p => p.id === id);
+  if (found) {
+    document.title = found.name.charAt(0).toUpperCase() + found.name.slice(1) + ' — Pokédex';
+  }
   // Mostrar panel con spinner
   $dEmpty.style.display = 'none';
   $dConten.style.display = 'block';
@@ -423,6 +397,7 @@ function closeDetail() {
   $dConten.style.display = 'none';
   document.querySelectorAll('.poke-card').forEach(c => c.classList.remove('active'));
   currentId = null;
+  document.title = 'Pokédex';
 }
 
 /**
@@ -486,14 +461,19 @@ async function renderDetail(p, species) {
         ${sprites.back   ? `<button class="sprite-tab" data-src="${sprites.back}">espalda</button>` : ''}
       </div>
 
-      <img id="detail-sprite" src="${esc(sprites.normal || '')}" alt="${esc(p.name)}" />
-      <h2 id="detail-name">${esc(p.name)}</h2>
+      <img id="detail-sprite" src="${sprites.normal || ''}" alt="${p.name}" />
+      <h2 id="detail-name">${p.name}</h2>
 
       <div id="detail-types">
         ${types.map(t =>
           `<span class="type-badge" style="background:${TYPE_COLORS[t] || '#888'}">${t}</span>`
         ).join('')}
       </div>
+
+      <!-- Botón agregar al equipo -->
+      <button id="btn-team" class="btn-team" data-id="${p.id}" data-in-team="0">
+        <span class="btn-team-icon">+</span> Agregar al equipo
+      </button>
     </div>
 
 
@@ -528,6 +508,13 @@ async function renderDetail(p, species) {
           </div>
         ` : ''}
 
+        ${genus ? `
+          <div class="info-cell full">
+            <div class="info-cell-label">Categoría</div>
+            <div class="info-cell-val" style="font-size:13px; font-weight:400">${genus}</div>
+          </div>
+        ` : ''}
+
       </div>
     </div>
 
@@ -537,10 +524,10 @@ async function renderDetail(p, species) {
       <div class="d-label">habilidades</div>
       <div id="abilities-list">
         ${p.abilities.map(a => `
-          <div class="ability-card" data-ability="${esc(a.ability.name)}">
+          <div class="ability-card" data-ability="${a.ability.name}">
             <div class="ability-header">
               <div class="ability-left">
-                <span class="ability-name">${esc(a.ability.name.replace(/-/g, ' '))}</span>
+                <span class="ability-name">${a.ability.name.replace(/-/g, ' ')}</span>
                 ${a.is_hidden ? '<span class="ability-hidden">oculta</span>' : ''}
               </div>
               <span class="ability-arrow">▾</span>
@@ -643,6 +630,20 @@ async function renderDetail(p, species) {
   // Activar tarjetas de habilidades
   initAbilityCards();
 
+  // Botón de equipo
+  if (window.updateTeamButton) window.updateTeamButton(p.id);
+  const $btnTeam = document.getElementById('btn-team');
+  if ($btnTeam) {
+    $btnTeam.addEventListener('click', () => {
+      if (window.handleTeamButton) window.handleTeamButton({
+        id:     p.id,
+        name:   p.name,
+        sprite: sprites.normal,
+        types:  types,
+      });
+    });
+  }
+
   // Cargar cadena evolutiva (es una petición separada)
   if (species?.evolution_chain?.url) {
     loadEvolutions(species.evolution_chain.url, p.id);
@@ -734,7 +735,7 @@ async function loadEvolutions(url, currentPokemonId) {
 
 
 /* ────────────────────────────────────────────
-   11. HABILIDADES DETALLADAS
+   10. HABILIDADES DETALLADAS
    ──────────────────────────────────────────── */
 
 const abilityCache = {};
@@ -792,20 +793,20 @@ function initAbilityCards() {
             <div class="ability-meta">
               ${ability.generation ? `
                 <span class="ability-meta-pill">
-                  <span class="ability-meta-label">introduced</span>
+                  <span class="ability-meta-label">introducida</span>
                   ${ability.generation}
                 </span>
               ` : ''}
               ${ability.pokemon.length ? `
                 <span class="ability-meta-pill">
-                  <span class="ability-meta-label">also in</span>
+                  <span class="ability-meta-label">también en</span>
                   ${ability.pokemon.join(', ')}
                 </span>
               ` : ''}
             </div>
           `;
         } catch {
-          body.innerHTML = `<p class="ability-desc" style="color:var(--text3)">Could not load ability data.</p>`;
+          body.innerHTML = `<p class="ability-desc" style="color:var(--text3)">No se pudo cargar la información.</p>`;
         }
       }
     });
@@ -814,7 +815,7 @@ function initAbilityCards() {
 
 
 /* ────────────────────────────────────────────
-   12. EVENTOS GLOBALES
+   11. EVENTOS GLOBALES
    ──────────────────────────────────────────── */
 
 // Cerrar el drawer en móvil al tocar fuera del panel
@@ -843,7 +844,11 @@ document.addEventListener('keydown', e => {
 
 
 /* ────────────────────────────────────────────
-   13. INICIO
+   12. INICIO
    Cargamos la primera generación al abrir la página.
    ──────────────────────────────────────────── */
 loadGen(1, 151);
+
+// Exponer funciones que team.js necesita
+window.TYPE_COLORS = TYPE_COLORS;
+window.showDetail  = showDetail;

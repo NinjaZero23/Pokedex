@@ -12,13 +12,6 @@ function saveUsers(u)      { localStorage.setItem(USERS_KEY, JSON.stringify(u));
 function getSession()      { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }
 function saveSession(user) { localStorage.setItem(SESSION_KEY, JSON.stringify({ name: user.name, email: user.email })); }
 
-/*
- * NOTA DE SEGURIDAD: hashPassword() usa el algoritmo djb2, diseñado para
- * tablas hash, NO para contraseñas. Es adecuado para esta demo local donde
- * los datos nunca salen del navegador del usuario, pero NO debe usarse en
- * producción con datos reales. En una app real: usa bcrypt o argon2 en un
- * servidor y nunca almacenes contraseñas en el cliente.
- */
 function hashPassword(pw) {
   let h = 0;
   for (let i = 0; i < pw.length; i++) { h = Math.imul(31, h) + pw.charCodeAt(i) | 0; }
