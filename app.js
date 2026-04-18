@@ -852,3 +852,6 @@ loadGen(1, 151);
 // Exponer funciones que team.js necesita
 window.TYPE_COLORS = TYPE_COLORS;
 window.showDetail  = showDetail;
+
+// Re-renderizar la barra de equipo ahora que TYPE_COLORS está disponible
+if (window.renderTeamBar) window.renderTeamBar();

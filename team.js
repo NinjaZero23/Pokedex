@@ -83,22 +83,42 @@ function renderTeamBar() {
   $slots.innerHTML = Array.from({ length: MAX_TEAM }, (_, i) => {
     const p = team[i];
     if (p) {
-      const mainColor = window.TYPE_COLORS?.[p.types?.[0]] || '#888';
+      const colors = window.TYPE_COLORS || {};
+      const mainColor = colors[p.types?.[0]] || '#4af0c4';
       return `
         <div class="team-slot filled" data-id="${p.id}" title="${p.name}">
           <div class="team-slot-bg" style="background:${mainColor}"></div>
           <img class="team-slot-img" src="${p.sprite}" alt="${p.name}" />
+          <span class="team-slot-name">${p.name}</span>
           <button class="team-slot-remove" data-id="${p.id}" title="Quitar del equipo">✕</button>
         </div>
       `;
     }
-    return `<div class="team-slot empty" title="Slot vacío"><span class="team-slot-plus">+</span></div>`;
+    return `
+      <div class="team-slot empty" title="Slot vacío">
+        <span class="team-slot-plus">+</span>
+      </div>`;
   }).join('');
 
   // Mostrar u ocultar la barra según si hay pokémon
   const hasPokemon = team.length > 0;
   $bar.classList.toggle('has-pokemon', hasPokemon);
   document.body.classList.toggle('team-bar-open', hasPokemon);
+
+  // Spacer en el panel de detalle para que el contenido no quede tapado
+  const $dContent = document.getElementById('detail-content');
+  const $dEmpty   = document.getElementById('detail-empty');
+  [$dContent, $dEmpty].forEach(el => {
+    if (!el) return;
+    let spacer = el.querySelector('#team-bar-spacer');
+    if (hasPokemon && !spacer) {
+      spacer = document.createElement('div');
+      spacer.id = 'team-bar-spacer';
+      el.appendChild(spacer);
+    } else if (!hasPokemon && spacer) {
+      spacer.remove();
+    }
+  });
 
   // Eventos: quitar pokémon
   $slots.querySelectorAll('.team-slot-remove').forEach(btn => {
@@ -248,3 +268,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderTeamBar();
   initClearTeam();
 });
+
+// Exponer para que app.js pueda llamarla después de cargar TYPE_COLORS
+window.renderTeamBar = renderTeamBar;
