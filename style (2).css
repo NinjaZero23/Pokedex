@@ -1,0 +1,1176 @@
+/* ============================================================
+   POKÉDEX — style.css
+
+   Estructura de este archivo:
+   1. Variables globales (colores, fuentes, medidas)
+   2. Reset y base
+   3. Header
+   4. Barra de tipos
+   5. Layout principal
+   6. Tarjetas de pokémon
+   7. Panel de detalle
+   8. Estados (loader, empty, no-results)
+   9. Responsive (móvil y tablet)
+   ============================================================ */
+
+
+/* ────────────────────────────────────────────
+   1. VARIABLES GLOBALES
+   Cambiar cualquier valor aquí afecta todo el diseño.
+   ──────────────────────────────────────────── */
+:root {
+  /* Fondos — de más oscuro a más claro */
+  --bg:       #080c10;   /* fondo de la página */
+  --bg2:      #0e1318;   /* fondo del panel lateral */
+  --surface:  #1a2330;   /* fondo de tarjetas */
+  --surface2: #1f2c3a;   /* fondo de elementos secundarios */
+
+  /* Bordes con transparencia */
+  --border:   rgba(255,255,255,0.06);
+  --border2:  rgba(255,255,255,0.12);
+
+  /* Texto */
+  --text:     #e8eef4;   /* texto principal */
+  --text2:    #7a93a8;   /* texto secundario */
+  --text3:    #3d5468;   /* texto muy tenue / placeholders */
+
+  /* Colores de acento */
+  --accent:   #4af0c4;   /* verde menta — color principal de la UI */
+  --red:      #ff4d6d;   /* rojo para el logo pokébola */
+
+  /* Medidas del layout */
+  --header-h:  64px;     /* altura del header */
+  --typebar-h: 45px;     /* altura de la barra de tipos */
+  --panel-w:   360px;    /* ancho del panel de detalle */
+
+  /* Bordes redondeados */
+  --r:    14px;
+  --r-sm:  8px;
+
+  /* Fuentes */
+  --font: 'Syne', sans-serif;
+  --mono: 'Syne Mono', monospace;
+}
+
+
+/* ────────────────────────────────────────────
+   2. RESET Y BASE
+   Elimina márgenes/paddings por defecto del navegador.
+   ──────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden; /* evita scroll horizontal */
+}
+
+/* Scrollbar personalizada (solo Chrome/Edge) */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 99px; }
+
+img { display: block; } /* elimina espacio extra debajo de las imágenes */
+button, input, select { font-family: var(--font); } /* hereda la fuente */
+
+
+/* ────────────────────────────────────────────
+   3. HEADER
+   Barra fija en la parte superior.
+   position:fixed + backdrop-filter = efecto "cristal"
+   ──────────────────────────────────────────── */
+#header {
+  position: fixed;         /* se queda fijo al hacer scroll */
+  top: 0; left: 0; right: 0;
+  height: var(--header-h);
+  z-index: 200;            /* por encima de todo el contenido */
+  background: rgba(8,12,16,0.9);
+  backdrop-filter: blur(20px); /* efecto glassmorphism */
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+}
+
+/* Logo */
+#logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0; /* no se encoge cuando hay poco espacio */
+}
+
+/* Círculo de la pokébola: dos mitades con conic-gradient */
+#logo-icon {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: conic-gradient(var(--red) 0deg 180deg, #2a3a4a 180deg 360deg);
+  position: relative;
+  box-shadow: 0 0 14px rgba(255,77,109,0.35);
+}
+/* Línea horizontal del medio */
+#logo-icon::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 0; right: 0;
+  height: 1px;
+  background: rgba(255,255,255,0.15);
+  transform: translateY(-50%);
+}
+/* Círculo central blanco */
+#logo-icon::after {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1.5px solid rgba(255,255,255,0.1);
+}
+
+#logo-text {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: var(--text);
+}
+
+/* Separador vertical entre logo y buscador */
+.hdivider {
+  width: 1px; height: 22px;
+  background: var(--border2);
+  flex-shrink: 0;
+}
+
+/* Buscador */
+.search-wrap {
+  flex: 1;
+  position: relative;
+  max-width: 340px;
+}
+.search-wrap svg {
+  position: absolute;
+  left: 11px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text3);
+  pointer-events: none; /* el icono no bloquea clics */
+}
+#search {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 8px 12px 8px 36px; /* padding-left deja espacio para el icono */
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+#search::placeholder { color: var(--text3); }
+#search:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(74,240,196,0.1);
+}
+
+/* Selector de generación */
+#gen-select {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color .2s;
+}
+#gen-select:focus { border-color: var(--accent); }
+
+/* Contador "X / 151" */
+#pokemon-count {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+
+/* Usuario en sesión */
+#user-menu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+#user-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #000;
+  flex-shrink: 0;
+}
+
+#user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#btn-logout {
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  color: var(--text3);
+  cursor: pointer;
+  padding: 5px 7px;
+  display: flex;
+  align-items: center;
+  transition: color .15s, border-color .15s;
+}
+#btn-logout:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+
+/* ────────────────────────────────────────────
+   4. BARRA DE FILTROS POR TIPO
+   Fija debajo del header, solo en la columna izquierda.
+   ──────────────────────────────────────────── */
+#type-bar {
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  right: var(--panel-w); /* no tapa el panel lateral */
+  height: var(--typebar-h);
+  z-index: 100;
+  background: rgba(8,12,16,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 24px;
+  overflow-x: auto;      /* scroll horizontal si hay muchos tipos */
+  scrollbar-width: none; /* oculta la barra de scroll en Firefox */
+}
+#type-bar::-webkit-scrollbar { display: none; } /* oculta en Chrome */
+
+/* Chip/botón de cada tipo */
+.type-chip {
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  transition: all .15s;
+}
+.type-chip:hover { color: var(--text); background: var(--surface); }
+/* El chip activo recibe color de fondo desde JavaScript */
+.type-chip.active { color: var(--text); border-color: var(--accent); font-weight: 600; background: transparent; }
+/* Cuando JS aplica color de fondo al chip activo, el texto debe ser negro */
+.type-chip.active[style*="background"] { color: #000; border-color: transparent; }
+
+
+/* ────────────────────────────────────────────
+   5. LAYOUT PRINCIPAL
+   Dos columnas side-by-side con flexbox.
+   El margin-top compensa el header + barra de tipos.
+   ──────────────────────────────────────────── */
+#main {
+  display: flex;
+  margin-top: calc(var(--header-h) + var(--typebar-h));
+  min-height: calc(100vh - var(--header-h) - var(--typebar-h));
+}
+
+/* Columna izquierda: ocupa todo el espacio sobrante */
+#grid-section {
+  flex: 1;
+  min-width: 0; /* evita overflow en flex */
+  padding: 22px;
+  /* Espacio extra para que la barra del equipo no tape las últimas tarjetas */
+  transition: padding-bottom .35s cubic-bezier(.16,1,.3,1);
+}
+
+/* Cuando la barra del equipo está visible, empujar el contenido hacia arriba */
+#team-bar.has-pokemon ~ #main #grid-section,
+body:has(#team-bar.has-pokemon) #grid-section,
+body.team-bar-open #grid-section {
+  padding-bottom: 120px;
+}
+
+/* El panel de detalle recibe padding-bottom via un spacer que JS inserta */
+#team-bar-spacer {
+  height: 90px;
+  flex-shrink: 0;
+}
+
+/* Grid de tarjetas: auto-fill llena el espacio disponible */
+#pokemon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 13px;
+}
+
+
+/* ────────────────────────────────────────────
+   6. TARJETAS DE POKÉMON
+   ──────────────────────────────────────────── */
+.poke-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 11px 11px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow: hidden; /* el blob no se sale de la tarjeta */
+  transition: transform .2s, border-color .2s, box-shadow .2s;
+  animation: card-in .3s ease both; /* animación de entrada */
+}
+
+/* Animación de aparición de cada tarjeta */
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Blob de color de fondo (círculo difuso del color del tipo) */
+.card-blob {
+  position: absolute;
+  top: -20px; left: 50%;
+  transform: translateX(-50%);
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  opacity: 0.14;
+  pointer-events: none;
+  transition: opacity .2s;
+}
+
+/* Hover: sube un poco y el blob brilla más */
+.poke-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border2);
+  box-shadow: 0 14px 36px rgba(0,0,0,0.55);
+}
+.poke-card:hover .card-blob { opacity: 0.28; }
+
+/* Tarjeta seleccionada: borde verde menta */
+.poke-card.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 12px 32px rgba(74,240,196,0.14);
+}
+
+/* Número (#001) */
+.card-num {
+  align-self: flex-start;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  position: relative;
+  z-index: 1; /* por encima del blob */
+}
+
+/* Sprite del pokémon */
+.card-img {
+  width: 78px; height: 78px;
+  image-rendering: pixelated; /* sprites sin blur */
+  position: relative;
+  z-index: 1;
+  transition: transform .25s;
+  filter: drop-shadow(0 5px 10px rgba(0,0,0,0.65));
+}
+.poke-card:hover .card-img { transform: scale(1.1) translateY(-2px); }
+
+/* Nombre del pokémon */
+.card-name {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--text);
+  margin-top: 7px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Contenedor de badges de tipo */
+.card-types {
+  display: flex;
+  gap: 4px;
+  margin-top: 5px;
+  flex-wrap: wrap;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* Badge de tipo (grass, fire, water...) — color viene de JS */
+.type-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  color: rgba(0,0,0,0.78);
+}
+
+
+/* ────────────────────────────────────────────
+   7. PANEL DE DETALLE
+   Columna derecha fija. Se convierte en drawer
+   desde abajo en móvil.
+   ──────────────────────────────────────────── */
+#detail-panel {
+  width: var(--panel-w);
+  flex-shrink: 0;
+  position: sticky;
+  top: calc(var(--header-h) + var(--typebar-h));
+  height: calc(100vh - var(--header-h) - var(--typebar-h));
+  overflow-y: auto;
+  border-left: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Estado vacío: pokébola flotante */
+#detail-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 40px;
+  text-align: center;
+}
+
+/* Pokébola animada decorativa */
+.empty-ball {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  position: relative;
+  opacity: 0.35;
+  animation: float 3s ease-in-out infinite;
+}
+.empty-ball::before { /* línea del medio */
+  content: '';
+  position: absolute;
+  top: 50%; left: 0; right: 0;
+  height: 1px;
+  background: var(--border2);
+  transform: translateY(-50%);
+}
+.empty-ball::after { /* botón central */
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+}
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+#detail-empty p { color: var(--text3); font-size: 13px; line-height: 1.65; }
+
+/* Contenido del detalle */
+#detail-content { padding: 0 0 28px; }
+
+/* Sección hero: sprite grande + nombre */
+.d-hero {
+  position: relative;
+  text-align: center;
+  padding: 26px 20px 18px;
+  overflow: hidden;
+}
+/* Degradado de fondo del color del tipo */
+.d-hero-bg {
+  position: absolute;
+  inset: 0;
+  opacity: 0.1;
+  pointer-events: none;
+}
+.d-hero-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Tabs para cambiar entre sprites (normal / shiny / espalda) */
+.sprite-tabs {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 1;
+}
+.sprite-tab {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  transition: all .15s;
+}
+.sprite-tab:hover, .sprite-tab.active {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+/* Sprite grande en el panel */
+#detail-sprite {
+  width: 145px; height: 145px;
+  image-rendering: pixelated;
+  margin: 0 auto;
+  filter: drop-shadow(0 10px 22px rgba(0,0,0,0.75));
+  position: relative;
+  z-index: 1;
+  transition: transform .3s;
+}
+#detail-sprite:hover { transform: scale(1.06); }
+
+#detail-name {
+  font-size: 25px;
+  font-weight: 800;
+  text-transform: capitalize;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  margin-top: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+#detail-types {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Secciones del panel (descripción, info, stats...) */
+.d-section {
+  padding: 0 20px;
+  margin-top: 18px;
+}
+
+/* Título de sección con línea a la derecha */
+.d-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 9px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.d-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Caja de descripción del pokédex */
+#detail-desc {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.75;
+  background: var(--surface);
+  border-radius: var(--r-sm);
+  padding: 11px 13px;
+  border-left: 2px solid var(--accent); /* acento verde */
+}
+
+/* Grid de información (altura, peso, etc.) */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+.info-cell {
+  background: var(--surface);
+  border-radius: var(--r-sm);
+  padding: 9px 12px;
+}
+.info-cell.full { grid-column: 1 / -1; } /* ocupa las dos columnas */
+.info-cell-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+}
+.info-cell-val {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: capitalize;
+}
+
+/* Filas de estadísticas (HP, ATK...) */
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+.stat-name {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  width: 50px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+.stat-val {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+  width: 24px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.stat-bar-bg {
+  flex: 1;
+  height: 5px;
+  background: var(--surface2);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width .7s cubic-bezier(.16,1,.3,1); /* animación suave */
+}
+
+/* Debilidades y resistencias */
+.weak-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+.weak-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  color: rgba(0,0,0,0.75);
+}
+.weak-badge .mult {
+  font-size: 8px;
+  vertical-align: super;
+  margin-left: 1px;
+  opacity: 0.8;
+}
+
+/* Cadena evolutiva */
+#evo-chain {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.evo-item {
+  flex: 1;
+  min-width: 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 9px 5px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.evo-item:hover { border-color: var(--border2); background: var(--surface2); }
+.evo-item.is-current { border-color: var(--accent); } /* pokémon actual */
+.evo-img {
+  width: 52px; height: 52px;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
+}
+.evo-name { font-size: 10px; color: var(--text2); text-transform: capitalize; text-align: center; }
+.evo-arrow {
+  color: var(--text3);
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+}
+.evo-lv { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+
+
+/* ────────────────────────────────────────────
+   8. ESTADOS: LOADER, EMPTY, NO RESULTS
+   ──────────────────────────────────────────── */
+
+/* Spinner de carga */
+#loader {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 80px 0;
+  color: var(--text3);
+  font-size: 13px;
+}
+
+/* Pokébola giratoria */
+.pokeball {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 3px solid var(--surface2);
+  border-top-color: var(--accent);
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Sin resultados de búsqueda */
+#no-results {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 80px 20px;
+  display: none; /* oculto por defecto, JS lo muestra */
+}
+#no-results .nr-icon {
+  font-family: var(--mono);
+  font-size: 52px;
+  color: var(--surface2);
+  line-height: 1;
+  margin-bottom: 10px;
+}
+#no-results p { color: var(--text3); font-size: 14px; }
+
+
+/* ────────────────────────────────────────────
+   TARJETAS DE HABILIDADES
+   ──────────────────────────────────────────── */
+
+#abilities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.ability-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  transition: border-color .15s;
+}
+.ability-card:hover { border-color: var(--border2); }
+
+.ability-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  cursor: pointer;
+  user-select: none;
+  gap: 8px;
+}
+
+.ability-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ability-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: capitalize;
+}
+
+.ability-hidden {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ability-arrow {
+  font-size: 12px;
+  color: var(--text3);
+  transition: transform .2s ease;
+  flex-shrink: 0;
+}
+
+.ability-body {
+  padding: 0 12px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.ability-loading {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0;
+}
+
+.ability-effect {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.65;
+  margin-top: 10px;
+  padding-left: 10px;
+  border-left: 2px solid var(--accent);
+}
+
+.ability-desc {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.65;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+.ability-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.ability-meta-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--surface2);
+  border-radius: var(--r-sm);
+  padding: 6px 9px;
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 500;
+  text-transform: capitalize;
+  flex: 1;
+  min-width: 120px;
+}
+
+.ability-meta-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 400;
+}
+
+
+/* ────────────────────────────────────────────
+   EQUIPO DE POKÉMON
+   ──────────────────────────────────────────── */
+
+/* Barra fija en la parte inferior */
+#team-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 300;  /* por encima de todo, incluido el detail panel */
+  background: rgba(8,12,16,0.97);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border2);
+  transform: translateY(100%);
+  transition: transform .35s cubic-bezier(.16,1,.3,1);
+  padding: 12px 20px 16px;
+}
+
+/* Se muestra cuando hay al menos un pokémon */
+#team-bar.has-pokemon { transform: translateY(0); }
+
+#team-bar-inner { max-width: 700px; margin: 0 auto; }
+
+/* Cabecera de la barra */
+#team-bar-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+#team-bar-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  flex: 1;
+}
+
+.team-bar-icon {
+  color: var(--accent);
+  font-size: 14px;
+}
+
+#team-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+
+#btn-clear-team {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 3px 9px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  transition: color .15s, border-color .15s;
+}
+#btn-clear-team:hover { color: var(--red); border-color: var(--red); }
+
+/* Fila de 6 slots */
+#team-slots {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+/* Slot individual */
+.team-slot {
+  aspect-ratio: 1;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .15s, transform .15s;
+  cursor: pointer;
+}
+
+/* Slot vacío */
+.team-slot.empty {
+  background: var(--surface);
+  cursor: default;
+}
+.team-slot-plus {
+  font-size: 20px;
+  color: var(--text3);
+  line-height: 1;
+}
+
+/* Slot lleno */
+.team-slot.filled { background: var(--surface); }
+.team-slot.filled:hover { transform: translateY(-2px); border-color: var(--accent); }
+
+/* Fondo de color del tipo */
+.team-slot-bg {
+  position: absolute;
+  inset: 0;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+/* Sprite del pokémon en el slot */
+.team-slot-img {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+/* Botón quitar (aparece en hover) */
+.team-slot-remove {
+  position: absolute;
+  top: 2px; right: 2px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--red);
+  border: none;
+  color: white;
+  font-size: 8px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .15s;
+  z-index: 2;
+  padding: 0;
+}
+.team-slot.filled:hover .team-slot-remove { opacity: 1; }
+
+
+/* Botón "Agregar al equipo" en el panel de detalle */
+.btn-team {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 8px 18px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: 99px;
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, color .15s, opacity .15s;
+  position: relative;
+  z-index: 1;
+}
+.btn-team:hover { background: var(--accent); color: #000; }
+.btn-team.in-team {
+  background: rgba(74,240,196,0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.btn-team:disabled {
+  border-color: var(--text3);
+  color: var(--text3);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.btn-team-icon { font-size: 15px; line-height: 1; }
+
+
+/* Badge en tarjetas del grid que están en el equipo */
+.poke-card.in-team {
+  border-color: var(--accent);
+}
+.poke-card.in-team::after {
+  content: '◈';
+  position: absolute;
+  top: 6px; right: 8px;
+  font-size: 10px;
+  color: var(--accent);
+  z-index: 2;
+}
+
+
+/* Toast de notificación */
+.team-toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 20px;
+  border-radius: 99px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity .25s, transform .25s;
+  z-index: 300;
+  pointer-events: none;
+}
+.team-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.team-toast.success { border-color: var(--accent); color: var(--accent); }
+.team-toast.error   { border-color: var(--red);    color: var(--red);    }
+
+
+/* ────────────────────────────────────────────
+   9. RESPONSIVE
+   ──────────────────────────────────────────── */
+
+/* Tablet y móvil: el panel lateral se convierte en drawer */
+@media (max-width: 820px) {
+  /* La barra de tipos ahora ocupa todo el ancho */
+  #type-bar { right: 0; }
+
+  /* El panel se posiciona fijo en la parte inferior */
+  #detail-panel {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    top: auto;
+    width: 100%;
+    height: 62vh;
+    border-left: none;
+    border-top: 1px solid var(--border2);
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -20px 60px rgba(0,0,0,0.75);
+    transform: translateY(100%);           /* oculto debajo de la pantalla */
+    transition: transform .35s cubic-bezier(.16,1,.3,1);
+    z-index: 150;
+  }
+  /* Clase .open la agrega JavaScript al seleccionar un pokémon */
+  #detail-panel.open { transform: translateY(0); }
+
+  /* Pastilla decorativa arriba del drawer */
+  #detail-panel::before {
+    content: '';
+    display: block;
+    width: 36px; height: 4px;
+    border-radius: 99px;
+    background: var(--border2);
+    margin: 11px auto 0;
+    flex-shrink: 0;
+  }
+}
+
+/* Móvil pequeño */
+@media (max-width: 480px) {
+  #pokemon-grid { grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 10px; }
+  #grid-section { padding: 14px; }
+  #header { padding: 0 14px; gap: 10px; }
+  #gen-select { display: none; }
+  #team-slots { grid-template-columns: repeat(6, 1fr); gap: 5px; }
+  .team-slot-img { width: 70%; height: 70%; }
+}
