@@ -906,6 +906,90 @@ body.team-bar-open #grid-section {
 
 
 /* ────────────────────────────────────────────
+   FAVORITOS
+   ──────────────────────────────────────────── */
+
+/* Botón corazón en la tarjeta del grid */
+.btn-fav {
+  position: absolute;
+  top: 6px; right: 7px;
+  width: 24px; height: 24px;
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color .15s, transform .15s;
+  border-radius: 50%;
+}
+.btn-fav:hover { color: var(--red); transform: scale(1.2); }
+.btn-fav.active { color: var(--red); }
+
+/* Botón favoritos en el panel de detalle */
+.btn-fav-detail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 9px 0;
+  width: 100%;
+  max-width: 220px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  color: var(--text2);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  position: relative;
+  z-index: 1;
+}
+.btn-fav-detail:hover { border-color: var(--red); color: var(--red); }
+.btn-fav-detail.active {
+  background: rgba(255,77,109,0.1);
+  border-color: var(--red);
+  color: var(--red);
+}
+.btn-fav-icon { font-size: 15px; line-height: 1; }
+
+/* Botón filtro favoritos en el header */
+#btn-fav-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  color: var(--text3);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all .15s;
+}
+#btn-fav-filter:hover { color: var(--red); border-color: var(--red); }
+#btn-fav-filter.active {
+  background: rgba(255,77,109,0.12);
+  border-color: var(--red);
+  color: var(--red);
+}
+#btn-fav-filter svg { flex-shrink: 0; transition: fill .15s; }
+#btn-fav-filter.active svg { fill: var(--red); stroke: var(--red); }
+
+
+/* ────────────────────────────────────────────
    EQUIPO DE POKÉMON
    ──────────────────────────────────────────── */
 

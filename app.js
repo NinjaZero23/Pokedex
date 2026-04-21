@@ -270,6 +270,12 @@ function applyFilters() {
     const matchesType   = activeType === 'all' || p.types.includes(activeType);
     return matchesSearch && matchesType;
   });
+
+  // Filtro de favoritos (si está activo)
+  if (window.filterByFavs) {
+    filteredPokemon = window.filterByFavs(filteredPokemon);
+  }
+
   renderGrid();
   updateCount();
 }
@@ -324,6 +330,7 @@ function makeCard(p, idx) {
   div.innerHTML = `
     <div class="card-blob" style="background:${mainColor}"></div>
     <span class="card-num">#${String(p.id).padStart(3, '0')}</span>
+    <button class="btn-fav" title="Agregar a favoritos" data-id="${p.id}">♡</button>
     <img class="card-img" src="${p.sprite || ''}" alt="${p.name}" loading="lazy" />
     <span class="card-name">${p.name}</span>
     <div class="card-types">
@@ -332,6 +339,25 @@ function makeCard(p, idx) {
       ).join('')}
     </div>
   `;
+
+  // Clic en el corazón — no propagar al card
+  const heartBtn = div.querySelector('.btn-fav');
+  heartBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    if (window.toggleFav) {
+      const added = window.toggleFav(p.id);
+      window.updateCardHeart(p.id);
+      window.updateFavButton && window.updateFavButton(p.id);
+      // Si el filtro de favoritos está activo y quitamos uno, re-filtrar
+      if (!added && window.activeFavFilter) applyFilters();
+    }
+  });
+
+  // Sincronizar estado inicial del corazón
+  if (window.isFav && window.isFav(p.id)) {
+    heartBtn.classList.add('active');
+    heartBtn.innerHTML = '♥';
+  }
 
   div.addEventListener('click', () => showDetail(p.id));
   return div;
@@ -473,6 +499,11 @@ async function renderDetail(p, species) {
       <!-- Botón agregar al equipo -->
       <button id="btn-team" class="btn-team" data-id="${p.id}" data-in-team="0">
         <span class="btn-team-icon">+</span> Agregar al equipo
+      </button>
+
+      <!-- Botón favoritos -->
+      <button id="btn-fav-detail" class="btn-fav-detail" data-id="${p.id}">
+        <span class="btn-fav-icon">♡</span> Agregar a favoritos
       </button>
     </div>
 
@@ -641,6 +672,15 @@ async function renderDetail(p, species) {
         sprite: sprites.normal,
         types:  types,
       });
+    });
+  }
+
+  // Botón de favoritos
+  if (window.updateFavButton) window.updateFavButton(p.id);
+  const $btnFav = document.getElementById('btn-fav-detail');
+  if ($btnFav) {
+    $btnFav.addEventListener('click', () => {
+      if (window.handleFavDetail) window.handleFavDetail(p.id, p.name);
     });
   }
 
@@ -850,8 +890,9 @@ document.addEventListener('keydown', e => {
 loadGen(1, 151);
 
 // Exponer funciones que team.js necesita
-window.TYPE_COLORS = TYPE_COLORS;
-window.showDetail  = showDetail;
+window.TYPE_COLORS  = TYPE_COLORS;
+window.showDetail   = showDetail;
+window.applyFilters = applyFilters;
 
 // Re-renderizar la barra de equipo ahora que TYPE_COLORS está disponible
 if (window.renderTeamBar) window.renderTeamBar();
