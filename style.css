@@ -204,6 +204,49 @@ button, input, select { font-family: var(--font); } /* hereda la fuente */
   flex-shrink: 0;
 }
 
+/* Display de créditos en el header */
+.credits-display {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  flex-shrink: 0;
+  padding: 5px 10px;
+  background: rgba(74,240,196,0.08);
+  border: 1px solid rgba(74,240,196,0.2);
+  border-radius: var(--r-sm);
+  transition: all .2s;
+  cursor: default;
+}
+.credits-display:hover { background: rgba(74,240,196,0.14); }
+
+/* Animación shake cuando no hay créditos */
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%,60% { transform: translateX(-4px); }
+  40%,80% { transform: translateX(4px); }
+}
+.credits-display.shake { animation: shake .4s ease; border-color: var(--red); color: var(--red); }
+
+/* Coste en el botón de equipo */
+.btn-team-cost {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 400;
+  opacity: 0.85;
+  margin-left: 4px;
+}
+.btn-team-cost.refund { color: var(--accent); }
+
+/* Coste total en la barra del equipo */
+.team-cost-total {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  margin-left: auto;
+  padding-right: 4px;
+}
+
 /* Usuario en sesión */
 #user-menu {
   display: flex;
@@ -903,6 +946,175 @@ body.team-bar-open #grid-section {
   letter-spacing: 0.06em;
   font-weight: 400;
 }
+
+
+/* ────────────────────────────────────────────
+   RACHA DIARIA
+   ──────────────────────────────────────────── */
+
+#streak-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s;
+}
+#streak-modal.open { opacity: 1; pointer-events: all; }
+
+.streak-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.82);
+  backdrop-filter: blur(6px);
+}
+
+.streak-panel {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  padding: 28px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.7);
+  transform: translateY(12px) scale(0.97);
+  transition: transform .3s cubic-bezier(.16,1,.3,1);
+}
+#streak-modal.open .streak-panel { transform: none; }
+
+.streak-header { text-align: center; }
+.streak-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: 0.03em;
+  margin-bottom: 6px;
+}
+.streak-title.broken { color: var(--text2); }
+.streak-sub {
+  font-size: 13px;
+  color: var(--text3);
+  line-height: 1.5;
+}
+
+/* Badge de recompensa del día */
+.streak-reward-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(74,240,196,0.1);
+  border: 1px solid rgba(74,240,196,0.25);
+  border-radius: var(--r);
+  padding: 14px 32px;
+}
+.streak-reward-num {
+  font-family: var(--mono);
+  font-size: 42px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+.streak-reward-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 2px;
+}
+
+/* Los 7 días */
+.streak-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  width: 100%;
+}
+
+.streak-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 8px 4px;
+  opacity: 0.45;
+  transition: all .2s;
+}
+
+.streak-day.claimed {
+  opacity: 0.7;
+  border-color: rgba(74,240,196,0.2);
+  background: rgba(74,240,196,0.05);
+}
+
+.streak-day.active {
+  opacity: 1;
+  border-color: var(--accent);
+  background: rgba(74,240,196,0.1);
+  box-shadow: 0 0 12px rgba(74,240,196,0.2);
+  transform: translateY(-2px);
+}
+
+.streak-day-num {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.streak-day-icon {
+  font-size: 14px;
+  line-height: 1;
+  color: var(--accent);
+}
+.streak-day:not(.active):not(.claimed) .streak-day-icon { color: var(--text3); }
+
+.streak-day-reward {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text2);
+  font-weight: 600;
+}
+.streak-day.active .streak-day-reward { color: var(--accent); }
+
+/* Total */
+.streak-total {
+  font-size: 13px;
+  color: var(--text3);
+  text-align: center;
+}
+.streak-total strong { color: var(--accent); }
+
+/* Botón */
+.streak-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--r-sm);
+  color: #000;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: opacity .15s, transform .15s;
+}
+.streak-btn:hover { opacity: 0.88; }
+.streak-btn:active { transform: scale(0.98); }
 
 
 /* ────────────────────────────────────────────

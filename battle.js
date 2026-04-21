@@ -374,8 +374,9 @@ function renderResultScreen($body) {
   const won         = playerAlive > 0 && aiAlive === 0;
   const lost        = playerAlive === 0;
 
-  // Guardar récord
+  // Guardar récord y recompensar créditos
   saveRecord(won);
+  if (window.rewardBattle) window.rewardBattle(won);
 
   $body.innerHTML = `
     <div class="battle-result">

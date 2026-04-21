@@ -670,16 +670,24 @@ async function renderDetail(p, species) {
   initAbilityCards();
 
   // Botón de equipo
-  if (window.updateTeamButton) window.updateTeamButton(p.id);
+  const pokemonForTeam = {
+    id:     p.id,
+    name:   p.name,
+    sprite: sprites.normal,
+    types:  types,
+    stats:  p.stats.map(s => ({ name: s.stat.name, value: s.base_stat })),
+  };
+
+  if (window.updateTeamButtonWithCost) {
+    window.updateTeamButtonWithCost(p.id, pokemonForTeam);
+  } else if (window.updateTeamButton) {
+    window.updateTeamButton(p.id);
+  }
+
   const $btnTeam = document.getElementById('btn-team');
   if ($btnTeam) {
     $btnTeam.addEventListener('click', () => {
-      if (window.handleTeamButton) window.handleTeamButton({
-        id:     p.id,
-        name:   p.name,
-        sprite: sprites.normal,
-        types:  types,
-      });
+      if (window.handleTeamButton) window.handleTeamButton(pokemonForTeam);
     });
   }
 

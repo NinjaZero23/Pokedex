@@ -271,3 +271,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Exponer para que app.js pueda llamarla después de cargar TYPE_COLORS
 window.renderTeamBar = renderTeamBar;
+
+// Parchear renderTeamBar para que también actualice el coste total
+const _origRenderTeamBar = renderTeamBar;
+window.renderTeamBar = function() {
+  _origRenderTeamBar();
+  if (window.renderTeamCostTotal) window.renderTeamCostTotal();
+};

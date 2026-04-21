@@ -418,6 +418,9 @@ function renderResultScreen($body) {
   const isNewRecord = saveRecord(score, difficulty);
   const pct = Math.round((score / QUIZ_TOTAL) * 100);
 
+  // Recompensar créditos si buen resultado
+  if (window.rewardQuiz) window.rewardQuiz(score, QUIZ_TOTAL);
+
   let emoji = '😓';
   let msg   = 'Sigue practicando';
   if (pct >= 90)      { emoji = '🏆'; msg = '¡Maestro Pokémon!'; }
