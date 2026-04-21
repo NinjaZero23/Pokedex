@@ -505,6 +505,14 @@ async function renderDetail(p, species) {
       <button id="btn-fav-detail" class="btn-fav-detail" data-id="${p.id}">
         <span class="btn-fav-icon">♡</span> Agregar a favoritos
       </button>
+
+      <!-- Botón comparar -->
+      <button id="btn-compare" class="btn-compare" data-id="${p.id}">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M18 20V10M12 20V4M6 20v-6"/>
+        </svg>
+        Comparar
+      </button>
     </div>
 
 
@@ -681,6 +689,28 @@ async function renderDetail(p, species) {
   if ($btnFav) {
     $btnFav.addEventListener('click', () => {
       if (window.handleFavDetail) window.handleFavDetail(p.id, p.name);
+    });
+  }
+
+  // Botón comparar
+  const $btnCompare = document.getElementById('btn-compare');
+  if ($btnCompare) {
+    $btnCompare.addEventListener('click', async () => {
+      // Necesitamos los stats completos — fetchearlos si no están en caché
+      try {
+        const full = cache[p.id] || await get(`${API}/pokemon/${p.id}`);
+        window.openComparator({
+          id:     full.id,
+          name:   full.name,
+          sprite: full.sprites.front_default,
+          types:  full.types.map(t => t.type.name),
+          stats:  full.stats.map(s => ({ name: s.stat.name, value: s.base_stat })),
+          height: full.height,
+          weight: full.weight,
+        });
+      } catch {
+        console.error('Error al abrir comparador');
+      }
     });
   }
 
@@ -893,6 +923,11 @@ loadGen(1, 151);
 window.TYPE_COLORS  = TYPE_COLORS;
 window.showDetail   = showDetail;
 window.applyFilters = applyFilters;
+
+// El comparador necesita acceder a los pokémon cargados para buscar
+Object.defineProperty(window, '_allPokemon', {
+  get: () => allPokemon,
+});
 
 // Re-renderizar la barra de equipo ahora que TYPE_COLORS está disponible
 if (window.renderTeamBar) window.renderTeamBar();
